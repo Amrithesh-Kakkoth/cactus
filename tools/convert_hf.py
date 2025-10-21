@@ -78,7 +78,7 @@ def save_tensor_with_header(tensor, output_path, precision='FP32', transpose=Fal
 
         dequantized_data = quantized_data.astype(np.float32) * scale
         mse_error = np.mean((original_data - dequantized_data) ** 2) if original_data.size>0 else 0.0
-        var_orig = np.var(original_data) if original_data.size>0 else 0.0
+        var_orig = np.var(original_data) if original_data.size > 0 else 0.0
         if mse_error <= 0.0:
             snr_db = float('inf')
         else:
