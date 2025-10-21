@@ -90,7 +90,7 @@ def save_tensor_with_header(tensor, output_path, precision='FP32', transpose=Fal
         norm_org = np.linalg.norm(original_flat)
         norm_deq = np.linalg.norm(dequantized_flat)
         if norm_org < eps or norm_deq < eps:
-            cos_sim = 1.0 if np.allclose(original_flat,dequantized_flat) else 0.0
+            cos_sim = 1.0 if np.allclose(original_flat, dequantized_flat) else 0.0
         else:
             cos_sim = np.dot(original_flat, dequantized_flat) / (norm_org * norm_deq)
 
