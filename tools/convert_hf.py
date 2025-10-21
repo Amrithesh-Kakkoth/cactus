@@ -82,7 +82,7 @@ def save_tensor_with_header(tensor, output_path, precision='FP32', transpose=Fal
         if mse_error <= 0.0:
             snr_db = float('inf')
         else:
-            snr_db = 10.0 * np.log10(max(var_orig,eps) / mse_error) if var_orig > 0 else float('inf')
+            snr_db = 10.0 * np.log10(max(var_orig, eps) / mse_error) if var_orig > 0 else float('inf')
 
 
         original_flat = original_data.flatten()
