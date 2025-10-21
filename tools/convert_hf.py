@@ -68,6 +68,7 @@ def save_tensor_with_header(tensor, output_path, precision='FP32', transpose=Fal
             clipped_min = min_val
             clipped_max = max_val
 
+        # Small epsilon value for numerical stability in variance, norm, and log calculations
         eps = 1e-8  
                 
         abs_max = max(abs(clipped_min), abs(clipped_max))
