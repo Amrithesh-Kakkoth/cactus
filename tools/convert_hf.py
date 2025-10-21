@@ -43,7 +43,7 @@ def save_tensor_with_header(tensor, output_path, precision='FP32', transpose=Fal
         standard_zero_point = qmax - max_val / standard_scale
         standard_zero_point_clipped = np.clip(np.round(standard_zero_point), qmin, qmax)
         test_quantized = np.clip(np.round(original_data / standard_scale + standard_zero_point_clipped), qmin, qmax)
-        test_saturation = np.sum(np.abs(test_quantized) >= 127) / original_data.size
+        test_saturation = np.sum(np.abs(test_quantized) >= 127) / original_data.size if original_data.size > 0 else 0.0
         
         saturation_threshold = args.saturation_threshold if args else 0.01
         if test_saturation > saturation_threshold:
@@ -67,19 +67,32 @@ def save_tensor_with_header(tensor, output_path, precision='FP32', transpose=Fal
         else:
             clipped_min = min_val
             clipped_max = max_val
-        
+
+        eps = 1e-8  
+                
         abs_max = max(abs(clipped_min), abs(clipped_max))
         scale = abs_max / 127.0 if abs_max != 0 else 1.0
         
         quantized_data = np.clip(np.round(original_data / scale), qmin, qmax).astype(np.int8)
 
         dequantized_data = quantized_data.astype(np.float32) * scale
-        mse_error = np.mean((original_data - dequantized_data) ** 2)
-        snr_db = 10 * np.log10(np.var(original_data) / mse_error) if mse_error > 0 else float('inf')
+        mse_error = np.mean((original_data - dequantized_data) ** 2) if original_data.size>0 else 0.0
+        var_orig = np.var(original_data) if original_data.size>0 else 0.0
+        if mse_error <= 0.0:
+            snr_db = float('inf')
+        else:
+            snr_db = 10.0 * np.log10(max(var_orig,eps) / mse_error) if var_orig > 0 else float('inf')
+
 
         original_flat = original_data.flatten()
         dequantized_flat = dequantized_data.flatten()
-        cos_sim = np.dot(original_flat, dequantized_flat) / (np.linalg.norm(original_flat) * np.linalg.norm(dequantized_flat))
+        norm_org = np.linalg.norm(original_flat)
+        norm_deq = np.linalg.norm(dequantized_flat)
+        if norm_org < eps or norm_deq < eps:
+            cos_sim = 1.0 if np.allclose(original_flat,dequantized_flat) else 0.0
+        else:
+            cos_sim = np.dot(original_flat, dequantized_flat) / (norm_org * norm_deq)
+
         saturated_values = np.sum(np.abs(quantized_data) == 127)
         saturation_percent = (saturated_values / quantized_data.size) * 100
         data = quantized_data
